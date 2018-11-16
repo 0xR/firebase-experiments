@@ -27,25 +27,27 @@ const App = () => {
   if (!subscribed) {
     firebase.auth().onAuthStateChanged(async function(user) {
       setUser(user);
-      db.collection("messages")
-        .doc("latest")
-        .onSnapshot(latest => {
-          setMessage(latest.data());
-        });
+      if (user) {
+        db.collection("messages")
+          .doc("latest")
+          .onSnapshot(latest => {
+            setMessage(latest.data());
+          });
+        db.collection("messages")
+          .orderBy("created", "desc")
+          .limit(10)
+          .onSnapshot(querySnapshot => {
+            const newHistory = [];
+            querySnapshot.forEach(doc => {
+              if (doc.id !== "latest") {
+                newHistory.push({ ...doc.data(), id: doc.id });
+              }
+            });
+            setMessageHistory(newHistory);
+          }, console.error.bind(console, "onSnapshot"));
+      }
     });
 
-    db.collection("messages")
-      .orderBy("created", "desc")
-      .limit(10)
-      .onSnapshot(querySnapshot => {
-        const newHistory = [];
-        querySnapshot.forEach(doc => {
-          if (doc.id !== "latest") {
-            newHistory.push(doc.data());
-          }
-        });
-        setMessageHistory(newHistory);
-      }, console.error.bind(console, "onSnapshot"));
     setSubscribed(true);
   }
 
