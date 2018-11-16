@@ -18,7 +18,10 @@ db.settings({ timestampsInSnapshots: true });
 
 const App = () => {
   const [user, setUser] = useState(null);
-  const [{ message }, setMessage] = useState({ message: "loading..." });
+  const [{ message } = { message: "no message..." }, setMessage] = useState({
+    message: "loading..."
+  });
+  const [messagesHistory, setMessageHistory] = useState([]);
   const [subscribed, setSubscribed] = useState(false);
 
   if (!subscribed) {
@@ -30,6 +33,19 @@ const App = () => {
           setMessage(latest.data());
         });
     });
+
+    db.collection("messages")
+      .orderBy("created", "desc")
+      .limit(10)
+      .onSnapshot(querySnapshot => {
+        const newHistory = [];
+        querySnapshot.forEach(doc => {
+          if (doc.id !== "latest") {
+            newHistory.push(doc.data());
+          }
+        });
+        setMessageHistory(newHistory);
+      }, console.error.bind(console, "onSnapshot"));
     setSubscribed(true);
   }
 
@@ -39,34 +55,39 @@ const App = () => {
         <>
           <h1>welcome back {user.displayName}</h1>
           <p>
-          <button
-            onClick={() => {
-              firebase
-                .auth()
-                .signOut()
-                .catch(console.log.bind(console, "signout error"));
-            }}
-          >
-            sign out
-          </button>
+            <button
+              onClick={() => {
+                firebase
+                  .auth()
+                  .signOut()
+                  .catch(console.log.bind(console, "signout error"));
+              }}
+            >
+              sign out
+            </button>
           </p>
           <p>
-          <button
-            onClick={async () => {
-              let message = {
-                message: `The time is ${new Date().toLocaleString()}`
-              };
-              db.collection("messages").add(message);
-              db.collection("messages")
-                .doc("latest")
-                .set(message);
-            }}
-          >
-            new message
-          </button>
+            <button
+              onClick={async () => {
+                let newMessage = {
+                  message: `The time is ${new Date().toLocaleString()}`,
+                  created: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                db.collection("messages").add(newMessage);
+                db.collection("messages")
+                  .doc("latest")
+                  .set(newMessage);
+              }}
+            >
+              new message
+            </button>
           </p>
           <h3>The latest message is:</h3>
           <p>{message}</p>
+          <h3>Message history:</h3>
+          {messagesHistory.map(({ message, id }) => (
+            <p key={id}>{message}</p>
+          ))}
         </>
       ) : (
         <button
