@@ -1,5 +1,4 @@
-import React, { Component } from "react";
-import logo from "./logo.svg";
+import React, { useState } from "react";
 import "./App.css";
 import firebase from "firebase/app";
 import "firebase/firestore";
@@ -16,7 +15,7 @@ const firebaseApp = firebase.initializeApp({
 
 const db = firebaseApp.firestore();
 
-db.collection("collection")
+db.collection("users")
   .get()
   .then(querySnapshot => {
     querySnapshot.forEach(doc => {
@@ -26,22 +25,34 @@ db.collection("collection")
 
 // real time watch
 db.collection("users").onSnapshot(function(snapshot) {
-    snapshot.docChanges().forEach(function (change) {
-        console.log("User change: ", change.doc.data());
-    });
+  snapshot.docChanges().forEach(function (change) {
+    console.log("User change: ", change.doc.data());
+  });
 });
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [subscribed, setSubscribed] = useState(false);
+
+  if (!subscribed) {
+    firebase.auth().onAuthStateChanged(function(user) {
+      setUser(user);
+    });
+    setSubscribed(true);
+  }
+
+  return (
+    <div className="App">
+      {user ? (
+        <h1>welcome back {user.displayName}</h1>
+      ) : (
         <button
           onClick={() => {
             firebase
               .auth()
               .signInWithPopup(new firebase.auth.GoogleAuthProvider())
-              .then(function(result) {
-                console.log("auth", { result });
+              .then(function({ user }) {
+                setUser(user);
               })
               .catch(function(error) {
                 console.log({ error });
@@ -50,9 +61,9 @@ class App extends Component {
         >
           sign in
         </button>
-      </div>
-    );
-  }
-}
+      )}
+    </div>
+  );
+};
 
 export default App;
