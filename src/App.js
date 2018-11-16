@@ -15,19 +15,6 @@ const firebaseApp = firebase.initializeApp({
 
 const db = firebaseApp.firestore();
 
-db.collection("users")
-  .add({
-    first: "Alan",
-    middle: "Mathison",
-    last: "Turing",
-    born: 1912
-  })
-  .then(function(docRef) {
-    console.log("Document written with ID: ", docRef.id);
-  })
-  .catch(function(error) {
-    console.error("Error adding document: ", error);
-  });
 
 db.collection("collection")
   .get()
@@ -36,6 +23,27 @@ db.collection("collection")
       console.log(`${doc.id} => `, doc.data());
     });
   });
+
+// real time watch
+db.collection("users").onSnapshot(function(snapshot) {
+    snapshot.docChanges().forEach(function (change) {
+        console.log("User change: ", change.doc.data());
+    });
+});
+
+db.collection("users")
+    .add({
+        first: "Alan",
+        middle: "Mathison",
+        last: "Turing",
+        born: 1912
+    })
+    .then(function(docRef) {
+        console.log("Document written with ID: ", docRef.id);
+    })
+    .catch(function(error) {
+        console.error("Error adding document: ", error);
+    });
 
 class App extends Component {
   render() {
