@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "ruben-oostinga-speeltuin"
+    "default": "ruben-oostinga-speeltuin",
+    "staging": "ruben-oostinga-speeltuin"
   }
 }
