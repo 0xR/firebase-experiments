@@ -15,21 +15,6 @@ const firebaseApp = firebase.initializeApp({
 
 const db = firebaseApp.firestore();
 
-db.collection("users")
-  .get()
-  .then(querySnapshot => {
-    querySnapshot.forEach(doc => {
-      console.log(`${doc.id} => `, doc.data());
-    });
-  });
-
-// real time watch
-db.collection("users").onSnapshot(function(snapshot) {
-  snapshot.docChanges().forEach(function (change) {
-    console.log("User change: ", change.doc.data());
-  });
-});
-
 const App = () => {
   const [user, setUser] = useState(null);
   const [subscribed, setSubscribed] = useState(false);
@@ -37,6 +22,20 @@ const App = () => {
   if (!subscribed) {
     firebase.auth().onAuthStateChanged(function(user) {
       setUser(user);
+      db.collection("users")
+        .get()
+        .then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            console.log(`${doc.id} => `, doc.data());
+          });
+        });
+
+      // real time watch
+      db.collection("users").onSnapshot(function(snapshot) {
+        snapshot.docChanges().forEach(function(change) {
+          console.log("User change: ", change.doc.data());
+        });
+      });
     });
     setSubscribed(true);
   }
@@ -44,7 +43,19 @@ const App = () => {
   return (
     <div className="App">
       {user ? (
-        <h1>welcome back {user.displayName}</h1>
+        <>
+          <h1>welcome back {user.displayName}</h1>
+          <button
+            onClick={() => {
+              firebase
+                .auth()
+                .signOut()
+                .catch(console.log.bind(console, "signout error"));
+            }}
+          >
+            sign out
+          </button>
+        </>
       ) : (
         <button
           onClick={() => {
