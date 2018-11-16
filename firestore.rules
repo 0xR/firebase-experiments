@@ -1,7 +1,9 @@
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
-      allow read, write: if request.auth.uid == "vLDOBdXa3ZeVoGLGSd72dj0U7i43";
+      allow read, write: if request.auth != null && (
+				request.auth.uid == "vLDOBdXa3ZeVoGLGSd72dj0U7i43" ||
+				request.auth.uid == "1VkWSwdTRBY4JfG4PLKJHG1w7YO2");
     }
   }
 }
