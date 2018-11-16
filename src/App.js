@@ -14,28 +14,30 @@ const firebaseApp = firebase.initializeApp({
 });
 
 const db = firebaseApp.firestore();
+db.settings({ timestampsInSnapshots: true });
 
 const App = () => {
   const [user, setUser] = useState(null);
+  const [{ message }, setMessage] = useState({ message: "loading..." });
   const [subscribed, setSubscribed] = useState(false);
 
   if (!subscribed) {
-    firebase.auth().onAuthStateChanged(function(user) {
+    firebase.auth().onAuthStateChanged(async function(user) {
       setUser(user);
-      db.collection("users")
-        .get()
-        .then(querySnapshot => {
-          querySnapshot.forEach(doc => {
-            console.log(`${doc.id} => `, doc.data());
-          });
+      db.collection("messages")
+        .doc("latest")
+        .onSnapshot(latest => {
+          setMessage(latest.data());
         });
-
-      // real time watch
-      db.collection("users").onSnapshot(function(snapshot) {
-        snapshot.docChanges().forEach(function(change) {
-          console.log("User change: ", change.doc.data());
-        });
-      });
+      setInterval(async () => {
+        let message = {
+          message: `The time is ${new Date().toLocaleString()}`
+        };
+        db.collection("messages").add(message);
+        db.collection("messages")
+          .doc("latest")
+          .set(message);
+      }, 5000);
     });
     setSubscribed(true);
   }
@@ -55,6 +57,8 @@ const App = () => {
           >
             sign out
           </button>
+          <h3>The latest message is:</h3>
+          <p>{message}</p>
         </>
       ) : (
         <button
