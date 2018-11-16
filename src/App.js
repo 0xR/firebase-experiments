@@ -29,15 +29,6 @@ const App = () => {
         .onSnapshot(latest => {
           setMessage(latest.data());
         });
-      setInterval(async () => {
-        let message = {
-          message: `The time is ${new Date().toLocaleString()}`
-        };
-        db.collection("messages").add(message);
-        db.collection("messages")
-          .doc("latest")
-          .set(message);
-      }, 5000);
     });
     setSubscribed(true);
   }
@@ -47,6 +38,7 @@ const App = () => {
       {user ? (
         <>
           <h1>welcome back {user.displayName}</h1>
+          <p>
           <button
             onClick={() => {
               firebase
@@ -57,6 +49,22 @@ const App = () => {
           >
             sign out
           </button>
+          </p>
+          <p>
+          <button
+            onClick={async () => {
+              let message = {
+                message: `The time is ${new Date().toLocaleString()}`
+              };
+              db.collection("messages").add(message);
+              db.collection("messages")
+                .doc("latest")
+                .set(message);
+            }}
+          >
+            new message
+          </button>
+          </p>
           <h3>The latest message is:</h3>
           <p>{message}</p>
         </>
